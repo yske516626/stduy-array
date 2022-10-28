@@ -1,0 +1,267 @@
+#define ROW 9
+#define COL 9
+#define ROWS ROW+2
+#define COLS COL+2
+
+#define COUNT 15
+
+#include<stdio.h>
+#include<windows.h>
+#include<stdlib.h>
+#include<time.h>
+
+
+//棋盘初始化
+void InitBoard(char board[ROWS][COLS], int rows, int cols, char set)
+{
+	int i = 0;
+	int j = 0;
+	for (i = 0; i < rows; i++)
+	{
+		for (j = 0; j < cols; j++)
+		{
+			board[i][j] = set;
+		}
+	}
+}
+
+//打印棋盘
+void PlayBoard(char board[ROWS][COLS], int row, int col)
+{
+	int i = 0;
+	int j = 0;
+	//列号
+	for (i = 1; i <= row; i++)
+	{
+		if (i == 1)
+			printf("    %d ", i);
+		else if (i < 10)
+			printf("  %d ", i);
+		else
+			printf(" %d ", i);
+	}
+	printf("\n");
+	printf("\n");
+	//i=1是因为作为下标，打印的是内部9*9的表格
+	for (j = 1; j <= col; j++)
+	{
+
+		if (j == 1)
+			printf("  |---");
+		else if (j > 1 && j < col)
+			printf("|---");
+		else if (j == col)
+			printf("|---|\n");
+	}
+	for (i = 1; i <= row; i++)
+	{
+		//行号
+		if (i < 10)
+			printf("%d ", i);
+		else
+			printf("%d", i);
+		for (j = 1; j <= col; j++)
+		{
+			if (j < col)
+				printf("| %c ", board[i][j]);
+			else if (j <= col)
+				printf("| %c |\n", board[i][j]);
+		}
+		for (j = 1; j <= col; j++)
+		{
+			if (j == 1)
+				printf("  |---");
+			else if (j > 1 && j < col)
+				printf("|---");
+			else if (j == col)
+				printf("|---|\n");
+		}
+
+	}
+}
+
+//布置雷
+void setarrange(char board[ROWS][COLS], int row, int col)
+{
+	int count = COUNT;
+	while (count)
+	{
+		int x = rand() % ROW + 1;
+		int y = rand() % COL + 1;
+		if (board[x][y] == '0')
+		{
+			board[x][y] = '1';
+			count--;
+		}
+	}
+}
+
+
+//扫雷
+
+int get_arrange_count(char arrange[ROWS][COLS], int x, int y)
+{
+	//'1' - '0' = 1
+	//'3' - ‘0' = 3     ascaii码值
+	return arrange[x - 1][y] +
+		arrange[x - 1][y - 1] +
+		arrange[x][y - 1] +
+		arrange[x + 1][y - 1] +
+		arrange[x + 1][y] +
+		arrange[x + 1][y + 1] +
+		arrange[x][y + 1] +
+		arrange[x - 1][y + 1] -
+		8 * '0';
+}
+
+void Fine(char arrange[ROWS][COLS], char show[ROWS][COLS], int row, int col)
+{
+	int x = 0;
+	int y = 0;
+	int win = 0;
+	while (win < row * col - COUNT)
+	{
+		printf("请输入排查雷的坐标(x y):");
+		scanf("%d%d", &x, &y);
+		if (x >= 1 && x <= row && y >= 1 && y <= col)
+		{
+			//1.踩雷
+			if (arrange[x][y] == '1')
+			{
+				printf("很遗憾你踩雷了\n雷的布置如下（1表示雷）：\n");
+				printf("\n");
+				PlayBoard(arrange, row, col);
+
+
+				break;
+			}
+			//不踩雷
+			else
+			{
+				//计算x，y坐标周围几个雷
+				int count = get_arrange_count(arrange, x, y);
+				show[x][y] = count + '0'; //show是个char类型数据
+				Sleep(2000);
+				system("cls");
+				PlayBoard(show, row, col);
+				win++;
+			}
+		}
+		else
+		{
+			printf("输入坐标非法，请重新输入\n");
+		}
+
+	}
+	if (win == row * col - COUNT)
+	{
+		printf("恭喜你，排雷成功\n");
+		printf("雷的布置如下(1表示雷)\n");
+		printf("\n");
+		PlayBoard(arrange, row, col);
+	}
+}
+
+void menu()
+{
+	printf("*******************************\n");
+	printf("******* 1.play   0.exit********\n");
+	printf("*******************************\n");
+}
+
+void fen()
+{
+	int i = 1;
+	printf("\n\n");
+	for (i = 1; i < ROW; i++)
+	{
+		printf("-----");
+	}
+	printf("\n");
+}
+
+void game()
+{
+	//布置雷的信息
+	char arrange[ROWS][COLS] = { 0 };
+
+	//排查出雷的信息
+	char show[ROWS][COLS] = { 0 };
+
+	//初始化
+	InitBoard(arrange, ROWS, COLS, '0');
+	InitBoard(show, ROWS, COLS, '*');
+
+	//打印棋盘
+	//PlayBoard(arrange, ROW, COL);雷的信息游戏是不会打印出来的
+	PlayBoard(show, ROW, COL);//玩家棋盘
+
+	//布置雷
+	setarrange(arrange, ROW, COL);
+	//PlayBoard(arrange, ROW, COL);//用于查看雷的排布
+
+	//扫雷
+	Fine(arrange, show, ROW, COL);
+
+
+	while (1)
+	{
+		int put = 0;
+		printf("请输入是否继续游戏，1：重新开始，2：退出\n");
+		scanf("%d", &put);
+		if (put == 1)
+		{
+			Sleep(2000);
+			system("cls");
+			break;
+		}
+		else if (put == 2)
+		{
+			printf("游戏结束，请关闭窗口\n");
+			Sleep(2000000000);
+		}
+		else
+		{
+			printf("请重新输入\n");
+			Sleep(2000);
+		}
+	}
+
+}
+
+
+void test()
+{
+	int input = 0;
+	srand((int)time(NULL));
+	do
+	{
+		menu();
+		printf("请输入(1/0) ->:");
+		scanf("%d", &input);
+		switch (input)
+		{
+		case 1:
+			printf("游戏开始\n");
+			Sleep(1500);
+			system("cls");
+			game();
+			break;
+		case 0:
+			printf("退出游戏\n");
+			Sleep(1500);
+			system("cls");
+			break;
+		default:
+			printf("选择错误，重新选择\n");
+			Sleep(1500);
+			system("cls");
+			break;
+		}
+	} while (input);
+}
+int main(void)
+{
+	test();
+	return 0;
+}
